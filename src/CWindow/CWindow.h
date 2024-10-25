@@ -71,9 +71,9 @@ static inline Window createWindow(char* windowName, int width, int height) {
     RegisterClass(&windowClass);
 
     /*            title      |minimise in corner|display close, minimise etc            */
-    DWORD style = WS_CAPTION | WS_MINIMIZEBOX   | WS_SYSMENU; 
+    DWORD style = WS_CAPTION | WS_MINIMIZEBOX   | WS_SYSMENU;
 
-    
+
 
 
     internalWindow.rect.left = 250;
@@ -86,7 +86,7 @@ static inline Window createWindow(char* windowName, int width, int height) {
     internalWindow.hwnd = CreateWindowEx(
         0,
         internalWindow.className,
-        newWindow.windowName, 
+        newWindow.windowName,
         style,
         internalWindow.rect.left,
         internalWindow.rect.top,
@@ -150,6 +150,8 @@ static inline bool processMessages() {
 
 // TODO: linux exclusive code
 #ifdef __linux__
+
+#include <X11/Xlib.h>
 
 
 

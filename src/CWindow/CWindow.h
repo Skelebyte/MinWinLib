@@ -49,7 +49,7 @@ typedef struct {
 } InternalWindow;
 
 
-Window window;
+Window test;
 InternalWindow internalWindow;
 
 static inline LRESULT CALLBACK windowProcess(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -85,6 +85,19 @@ static inline Window createWindow(char* windowName, int width, int height) {
 
     internalWindow.className = L"CWindow"; // L means wide string
 
+
+
+    /*
+    WS_CAPTION - window title
+    WS_MINIMIZEBOX - minimize button
+    WS_SYSMENU - close button etc
+    WS_SIZEBOX - ???
+    */
+    DWORD style = WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX;
+
+
+    //windowClass.style = style; CAUSES CRASH       why?
+
     WNDCLASS windowClass = {0};
     windowClass.lpszClassName = internalWindow.className;
     windowClass.lpszMenuName = windowName;
@@ -94,12 +107,6 @@ static inline Window createWindow(char* windowName, int width, int height) {
     windowClass.lpfnWndProc = windowProcess;
 
     RegisterClass(&windowClass);
-
-    /*            title      |minimise in corner|display close, minimise etc            */
-    DWORD style = WS_CAPTION | WS_MINIMIZEBOX   | WS_SYSMENU;
-
-
-
 
     internalWindow.rect.left = 250;
     internalWindow.rect.top = 250;
@@ -139,6 +146,8 @@ static inline Window createWindow(char* windowName, int width, int height) {
 }
 
 inline bool deleteWindow() {
+    printf("Window destroyed.\n");
+
     windowCreated = false;
     UnregisterClass(internalWindow.className, internalWindow.instance);
     return true;
@@ -150,14 +159,14 @@ static inline bool processMessages() {
 
     while(PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
 
-        if(message.message == WM_QUIT || window.shouldClose == true) {
+        if(message.message == WM_QUIT/* || window.shouldClose == true */) {
             return false;
         }
         RECT temp;
         GetWindowRect(internalWindow.hwnd, &temp);
 
-        window.width = temp.right - temp.left;
-        window.height = temp.bottom - temp.top;
+        // window.width = temp.right - temp.left;
+        // window.height = temp.bottom - temp.top;
 
         TranslateMessage(&message);
         DispatchMessage(&message);
@@ -176,10 +185,21 @@ while(window.shouldClose == false) {
 }
 ```
 */ 
-static inline int process() {
+static inline int process(Window* windowToProcess) {
+
+    if(windowToProcess->shouldClose) deleteWindow();
+
     if(!processMessages()) {
-        window.shouldClose = true;
+        windowToProcess->shouldClose = true;
     }
+
+    if(UpdateWindow(internalWindow.hwnd) == 0 && windowToProcess->shouldClose == false) {
+        MessageBox(internalWindow.hwnd, "Window failed to update.", "CWindow Err", MB_ICONERROR);
+        windowToProcess->shouldClose = true;
+        
+        return 1;
+    }
+
     return 0;
 }
 

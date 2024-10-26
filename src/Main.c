@@ -7,12 +7,13 @@ int main() {
     Window window = createWindow("Hi, mum!", 1000, 600);
 
     while(window.shouldClose == false) {
-        process();
+
+        process(&window);
 
         Sleep(10);
     }
 
-
+    ("Should be closed?\n");
     return 0;
 
 }

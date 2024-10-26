@@ -76,7 +76,7 @@ Creates the window with specified name, width, height.
 Window window = createWindow("Hi, mum!", 1000, 600);
 ```
 */
-static inline Window createWindow(char* windowName, int width, int height) {
+static inline Window createWindow(char* windowName, int width, int height, bool resizable) {
     Window newWindow;
     newWindow.windowName = windowName;
     newWindow.shouldClose = false;
@@ -89,12 +89,17 @@ static inline Window createWindow(char* windowName, int width, int height) {
 
     /*
     WS_CAPTION - window title
+    WS_MAXIMIZEBOX - maximize button
     WS_MINIMIZEBOX - minimize button
     WS_SYSMENU - close button etc
-    WS_SIZEBOX - ???
+    WS_SIZEBOX - allow window resizing
     */
-    DWORD style = WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX;
-
+    DWORD style;
+    if(resizable == true) {
+        style = WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SIZEBOX;
+    } else {
+        style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+    }
 
     //windowClass.style = style; CAUSES CRASH       why?
 
@@ -146,7 +151,6 @@ static inline Window createWindow(char* windowName, int width, int height) {
 }
 
 inline bool deleteWindow() {
-    printf("Window destroyed.\n");
 
     windowCreated = false;
     UnregisterClass(internalWindow.className, internalWindow.instance);

@@ -4,16 +4,15 @@
 int main() {
     printf("Creating window!\n");
 
-    Window window = createWindow("Hi, mum!", 1000, 600);
+    Window window = createWindow("Hi, mum!", 1000, 600, false);
 
     while(window.shouldClose == false) {
-
         process(&window);
 
         Sleep(10);
     }
 
-    ("Should be closed?\n");
+    printf("Loop ended\n");
     return 0;
 
 }

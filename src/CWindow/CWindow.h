@@ -7,15 +7,28 @@ typedef int bool;
 #define true 1
 #define false 0
 
-typedef struct {
-    char* windowName;
-    bool shouldClose;
+/*
+Window struct.
+Holds data related the created window.
 
+`windowName` - Name of the window. (`char*`)
+`shouldClose` - If the window needs to close. (`bool`)
+`width` - Width of the window. (`int`)
+`height` - Height of the window. (`int`)
+*/
+typedef struct {
+    // Name of the window.
+    char* windowName;
+    // If the window needs to close.
+    bool shouldClose;
+    // Width of the window.
     int width;
+    // Height of the window.
     int height;
 
 } Window;
 
+// Has the window been created?
 bool windowCreated;
 
 // windows exclusive code
@@ -35,6 +48,7 @@ typedef struct {
 
 } InternalWindow;
 
+
 Window window;
 InternalWindow internalWindow;
 
@@ -51,6 +65,17 @@ static inline LRESULT CALLBACK windowProcess(HWND hwnd, UINT message, WPARAM wPa
 }
 
 // TODO: allow for window resizing, unless specified otherwise
+/*
+Creates the window with specified name, width, height.
+ 
+`windowName` - Name of the window. (`char*`)
+`width` - Width of the window. (`int`)
+`height` - Height of the window. (`int`)
+ 
+```c
+Window window = createWindow("Hi, mum!", 1000, 600);
+```
+*/
 static inline Window createWindow(char* windowName, int width, int height) {
     Window newWindow;
     newWindow.windowName = windowName;
@@ -106,13 +131,15 @@ static inline Window createWindow(char* windowName, int width, int height) {
 
     }
 
+    windowCreated = true;
+
     ShowWindow(internalWindow.hwnd, SW_SHOW);
 
     return newWindow;
 }
 
 inline bool deleteWindow() {
-
+    windowCreated = false;
     UnregisterClass(internalWindow.className, internalWindow.instance);
     return true;
 }
@@ -137,6 +164,23 @@ static inline bool processMessages() {
     }
 
     return true;
+}
+/* 
+Check if the window is trying to close.
+Should be called in the programs while loop:
+```c
+while(window.shouldClose == false) {
+    process();
+
+    // what ever else the program does...
+}
+```
+*/ 
+static inline int process() {
+    if(!processMessages()) {
+        window.shouldClose = true;
+    }
+    return 0;
 }
 
 #endif

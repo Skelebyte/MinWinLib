@@ -6,18 +6,10 @@ int main() {
 
     Window window = createWindow("Hi, mum!", 1000, 600);
 
-    printf("(%i, %i)", window.width, window.height);
-
     while(window.shouldClose == false) {
-        // do some crazy renderering 
-        if(!processMessages()) {
-
-            window.shouldClose = true;
-
-        }
+        process();
 
         Sleep(10);
-
     }
 
 

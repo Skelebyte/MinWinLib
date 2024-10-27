@@ -9,8 +9,6 @@ int main() {
     while(window.closed == false) {
         MWL_process(&window);
 
-        printf("testing\n");
-
         Sleep(10);
     }
 

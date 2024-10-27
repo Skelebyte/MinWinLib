@@ -2,12 +2,10 @@
 #define MINWINLIB_H
 
 #include <stdio.h>
-// #include <stdbool.h>
+#include <stdbool.h>
 
-// stdbool.h made this obsolete :\      
- typedef int bool;
- #define true 1
- #define false 0
+
+
 
 /*
 Window struct.
@@ -56,7 +54,7 @@ typedef struct {
 MWL_Window MWL_window;
 MWL_InternalWindow MWL_internal;
 
-static inline LRESULT CALLBACK windowProcess(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+static inline LRESULT CALLBACK MWL_windowProcess(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
     if(message == WM_CLOSE) {
         MWL_deleteWindow(hwnd);
@@ -113,7 +111,7 @@ static inline MWL_Window MWL_createWindow(char* windowName, int width, int heigh
     windowClass.hInstance = MWL_internal.instance;
     windowClass.hIcon = LoadIcon(NULL, IDI_WINLOGO);
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-    windowClass.lpfnWndProc = windowProcess;
+    windowClass.lpfnWndProc = MWL_windowProcess;
 
     RegisterClass(&windowClass);
 
@@ -154,10 +152,10 @@ static inline MWL_Window MWL_createWindow(char* windowName, int width, int heigh
     return newWindow;
 }
 
-inline bool MWL_deleteWindow(HWND hwnd) {
+inline int MWL_deleteWindow() {
     MWL_windowCreated = false;
     UnregisterClass(MWL_internal.className, MWL_internal.instance);
-    return true;
+    return 0;
 }
 
 static inline bool MWL_processMessages() {
@@ -193,8 +191,6 @@ while(window.closed == false) {
 ```
 */ 
 static inline int MWL_process(MWL_Window* windowToProcess) {
-
-    if(windowToProcess->closed) MWL_deleteWindow(MWL_internal.hwnd);
 
     if(!MWL_processMessages()) {
         windowToProcess->closed = true;

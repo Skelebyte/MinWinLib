@@ -31,13 +31,15 @@ typedef struct {
 // Has the MWL_Window been created?
 bool MWL_windowCreated;
 
-// MWL_Windows exclusive code
+// Windows OS exclusive code
 #ifdef _WIN32
 
 #include <Windows.h>
 
 
-
+// Internal Window
+// ! WARNING ! This struct is strictly for uses INSIDE the MWL header. It is not compatable with other APIs or systems
+// Should NOT be referenced in main code, it is not cross-platform.
 typedef struct {
 
     HINSTANCE instance;
@@ -215,13 +217,17 @@ static inline int MWL_process(MWL_Window* windowToProcess) {
 
 
 
-// TODO: linux exclusive code
+// TODO: Linux OS exclusive code
 #ifdef __linux__
 
 #include <X11/Xlib.h>
-
+// Internal Window
+// ! WARNING ! This struct is strictly for uses INSIDE the MWL header. It is not compatable with other APIs or systems
+// Should NOT be referenced in main code, it is not cross-platform.
 typedef struct {
     Display* display;
+    Window root;
+    Window window;
 } MWL_InternalWindow;
 
 MWL_InternalWindow MWL_internal;
@@ -235,6 +241,33 @@ static inline MWL_Window MWL_createWindow(char* windowName, int width, int heigh
         MWL_Window empty = {0};
         return empty;
     }
+
+    MWL_internal.root = DefaultRootWindow(MWL_internal.display);
+
+    if (MWL_internal.root == NULL) {
+        printf("Failed to get display root.\n");
+        MWL_Window empty = { 0 };
+
+        XCloseDisplay(MWL_internal.display);
+
+        return empty;
+    }
+
+    MWL_internal.window = XCreateSimpleWindow(MWL_internal.display, MWL_internal.root, 0, 0, width, height, 0, 0, 0, 0);
+
+    if (MWL_internal.window == NULL) {
+        printf("Failed to create window.\n");
+        MWL_Window empty = { 0 };
+
+        XCloseDisplay(MWL_internal.display);
+
+        return empty;
+    }
+
+    XMapWindow(MWL_internal.display, MWL_internal.window);
+
+
+
 
     
 

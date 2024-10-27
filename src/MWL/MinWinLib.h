@@ -1,18 +1,20 @@
-#ifndef CWINDOW_H
-#define CWINDOW_H
+#ifndef MINWINLIB_H
+#define MINWINLIB_H
 
 #include <stdio.h>
+// #include <stdbool.h>
 
-typedef int bool;
-#define true 1
-#define false 0
+// stdbool.h made this obsolete :\      
+ typedef int bool;
+ #define true 1
+ #define false 0
 
 /*
 Window struct.
 Holds data related the created window.
 
 `windowName` - Name of the window. (`char*`)
-`shouldClose` - If the window needs to close. (`bool`)
+`closed` - If the window needs to close. (`bool`)
 `width` - Width of the window. (`int`)
 `height` - Height of the window. (`int`)
 */
@@ -20,18 +22,18 @@ typedef struct {
     // Name of the window.
     char* windowName;
     // If the window needs to close.
-    bool shouldClose;
+    bool closed;
     // Width of the window.
     int width;
     // Height of the window.
     int height;
 
-} Window;
+} MWL_Window;
 
-// Has the window been created?
-bool windowCreated;
+// Has the MWL_Window been created?
+bool MWL_windowCreated;
 
-// windows exclusive code
+// MWL_Windows exclusive code
 #ifdef _WIN32
 
 #include <Windows.h>
@@ -39,6 +41,7 @@ bool windowCreated;
 
 
 typedef struct {
+
     HINSTANCE instance;
     HWND hwnd;
 
@@ -46,16 +49,17 @@ typedef struct {
 
     RECT rect;
 
-} InternalWindow;
+
+} MWL_InternalWindow;
 
 
-Window test;
-InternalWindow internalWindow;
+MWL_Window MWL_window;
+MWL_InternalWindow MWL_internal;
 
 static inline LRESULT CALLBACK windowProcess(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
     if(message == WM_CLOSE) {
-        deleteWindow(hwnd);
+        MWL_deleteWindow(hwnd);
     } else if(message == WM_DESTROY) {
         PostQuitMessage(0);
         return 0;
@@ -76,14 +80,14 @@ Creates the window with specified name, width, height.
 Window window = createWindow("Hi, mum!", 1000, 600);
 ```
 */
-static inline Window createWindow(char* windowName, int width, int height, bool resizable) {
-    Window newWindow;
+static inline MWL_Window MWL_createWindow(char* windowName, int width, int height, bool resizable) {
+    MWL_Window newWindow;
     newWindow.windowName = windowName;
-    newWindow.shouldClose = false;
+    newWindow.closed = false;
 
-    internalWindow.instance = GetModuleHandle(NULL);
+    MWL_internal.instance = GetModuleHandle(NULL);
 
-    internalWindow.className = L"CWindow"; // L means wide string
+    MWL_internal.className = L"MinWin"; // L means wide string
 
 
 
@@ -104,70 +108,69 @@ static inline Window createWindow(char* windowName, int width, int height, bool 
     //windowClass.style = style; CAUSES CRASH       why?
 
     WNDCLASS windowClass = {0};
-    windowClass.lpszClassName = internalWindow.className;
+    windowClass.lpszClassName = MWL_internal.className;
     windowClass.lpszMenuName = windowName;
-    windowClass.hInstance = internalWindow.instance;
+    windowClass.hInstance = MWL_internal.instance;
     windowClass.hIcon = LoadIcon(NULL, IDI_WINLOGO);
     windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
     windowClass.lpfnWndProc = windowProcess;
 
     RegisterClass(&windowClass);
 
-    internalWindow.rect.left = 250;
-    internalWindow.rect.top = 250;
-    internalWindow.rect.right = internalWindow.rect.left + width;
-    internalWindow.rect.bottom = internalWindow.rect.top + height;
+    MWL_internal.rect.left = 250;
+    MWL_internal.rect.top = 250;
+    MWL_internal.rect.right = MWL_internal.rect.left + width;
+    MWL_internal.rect.bottom = MWL_internal.rect.top + height;
 
-    AdjustWindowRect(&internalWindow.rect, style, FALSE);
+    AdjustWindowRect(&MWL_internal.rect, style, FALSE);
 
-    internalWindow.hwnd = CreateWindowEx(
+    MWL_internal.hwnd = CreateWindowEx(
         0,
-        internalWindow.className,
+        MWL_internal.className,
         newWindow.windowName,
         style,
-        internalWindow.rect.left,
-        internalWindow.rect.top,
+        MWL_internal.rect.left,
+        MWL_internal.rect.top,
         width, // can also be RECT.left - RECT.right
         height, // can also be RECT.bottom - RECT.top
         NULL,
         NULL,
-        internalWindow.instance,
+        MWL_internal.instance,
         NULL
     );
 
     // check if hwnd failed to be created
-    if(internalWindow.hwnd == NULL) {
-        MessageBox(internalWindow.hwnd, "Could not create window.", "CWindow Err", MB_ICONERROR);
-        Window empty = {0};
+    if(MWL_internal.hwnd == NULL) {
+        MessageBox(MWL_internal.hwnd, "Could not create window.", "CWindow Err", MB_ICONERROR);
+        MWL_Window empty = {0};
         return empty;
 
     }
 
-    windowCreated = true;
+    MWL_windowCreated = true;
 
-    ShowWindow(internalWindow.hwnd, SW_SHOW);
+    ShowWindow(MWL_internal.hwnd, SW_SHOW);
 
     return newWindow;
 }
 
-inline bool deleteWindow() {
-
-    windowCreated = false;
-    UnregisterClass(internalWindow.className, internalWindow.instance);
+inline bool MWL_deleteWindow(HWND hwnd) {
+    MWL_windowCreated = false;
+    UnregisterClass(MWL_internal.className, MWL_internal.instance);
     return true;
 }
 
-static inline bool processMessages() {
+static inline bool MWL_processMessages() {
 
     MSG message = {0};
 
     while(PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
 
-        if(message.message == WM_QUIT/* || window.shouldClose == true */) {
+        if(message.message == WM_QUIT/* || window.closed == true */) {
             return false;
         }
         RECT temp;
-        GetWindowRect(internalWindow.hwnd, &temp);
+        GetWindowRect(MWL_internal.hwnd, &temp);
 
         // window.width = temp.right - temp.left;
         // window.height = temp.bottom - temp.top;
@@ -182,24 +185,24 @@ static inline bool processMessages() {
 Check if the window is trying to close.
 Should be called in the programs while loop:
 ```c
-while(window.shouldClose == false) {
+while(window.closed == false) {
     process();
 
     // what ever else the program does...
 }
 ```
 */ 
-static inline int process(Window* windowToProcess) {
+static inline int MWL_process(MWL_Window* windowToProcess) {
 
-    if(windowToProcess->shouldClose) deleteWindow();
+    if(windowToProcess->closed) MWL_deleteWindow(MWL_internal.hwnd);
 
-    if(!processMessages()) {
-        windowToProcess->shouldClose = true;
+    if(!MWL_processMessages()) {
+        windowToProcess->closed = true;
     }
 
-    if(UpdateWindow(internalWindow.hwnd) == 0 && windowToProcess->shouldClose == false) {
-        MessageBox(internalWindow.hwnd, "Window failed to update.", "CWindow Err", MB_ICONERROR);
-        windowToProcess->shouldClose = true;
+    if(UpdateWindow(MWL_internal.hwnd) == 0 && windowToProcess->closed == false) {
+        MessageBox(MWL_internal.hwnd, "Window failed to update.", "CWindow Err", MB_ICONERROR);
+        windowToProcess->closed = true;
         
         return 1;
     }
@@ -221,11 +224,29 @@ static inline int process(Window* windowToProcess) {
 
 #include <X11/Xlib.h>
 
+typedef struct {
+    Display* display;
+} MWL_InternalWindow;
 
+MWL_InternalWindow MWL_internal;
+
+
+static inline MWL_Window MWL_createWindow(char* windowName, int width, int height, bool resizable) {
+    MWL_internal.display = XOpenDisplay(NULL);
+
+    if(MWL_internal.display == NULL) {
+        printf("Failed to open Display.\n");
+        MWL_Window empty = {0};
+        return empty;
+    }
+
+    
+
+}
 
 #endif
 
 // TODO: mac exclusive code??       is it worth mac support? what poor soul uses mac?
 
 
-#endif // CWINDOW_H
+#endif // MINWINLIB_H

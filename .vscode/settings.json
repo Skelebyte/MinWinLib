@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stdio.h": "c",
-        "cwindow.h": "c"
+        "cwindow.h": "c",
+        "*.rh": "cpp"
     }
 }

@@ -1,13 +1,13 @@
 #include <stdio.h>
-#include "CWindow/CWindow.h"
+#include "MWL/MinWinLib.h"
 
 int main() {
     printf("Creating window!\n");
 
-    Window window = createWindow("Hi, mum!", 1000, 600, false);
+    MWL_Window window = MWL_createWindow("Hi, mum!", 1000, 600, true);
 
-    while(window.shouldClose == false) {
-        process(&window);
+    while(window.closed == false) {
+        MWL_process(&window);
 
         Sleep(10);
     }

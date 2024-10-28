@@ -156,7 +156,16 @@ static inline MWL_Window MWL_createWindow(char* windowName, int width, int heigh
 
 inline int MWL_deleteWindow() {
     MWL_windowCreated = false;
-    UnregisterClass(MWL_internal.className, MWL_internal.instance);
+
+    /* strange error:
+     src\MWL/MinWinLib.h:159:22: error: passing argument 1 of 'UnregisterClassW' makes pointer from integer without a cast [-Wint-conversion]
+     159 |     UnregisterClassW((int) MWL_internal.className, MWL_internal.instance);
+     |                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     |                      |
+     |                      int
+    */
+    // FIXME: this error also occurs where MWL_internal.className is referenced
+    UnregisterClassW(MWL_internal.className, MWL_internal.instance);
     return 0;
 }
 

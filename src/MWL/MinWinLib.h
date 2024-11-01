@@ -59,7 +59,7 @@ MWL_InternalWindow MWL_internal;
 static inline LRESULT CALLBACK MWL_windowProcess(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
 
     if(message == WM_CLOSE) {
-        MWL_deleteWindow(hwnd);
+        MWL_deleteWindow();
     } else if(message == WM_DESTROY) {
         PostQuitMessage(0);
         return 0;
@@ -218,9 +218,9 @@ static inline int MWL_process(MWL_Window* windowToProcess) {
 
 
 // TODO: Linux OS exclusive code
-#ifdef __linux__
+#ifdef __linux__ // thank you https://gist.github.com/m1nuz/8f8f10a7f8715b62fe79
 
-#include <X11/Xlib.h>
+#include <X11/Xlib.h> 
 // Internal Window
 // ! WARNING ! This struct is strictly for uses INSIDE the MWL header. It is not compatable with other APIs or systems
 // Should NOT be referenced in main code, it is not cross-platform.
@@ -228,6 +228,8 @@ typedef struct {
     Display* display;
     Window root;
     Window window;
+    XEvent event;
+    Atom deleteWindow;
 } MWL_InternalWindow;
 
 MWL_InternalWindow MWL_internal;
@@ -266,11 +268,37 @@ static inline MWL_Window MWL_createWindow(char* windowName, int width, int heigh
 
     XMapWindow(MWL_internal.display, MWL_internal.window);
 
+    MWL_internal.deleteWindow = XInternAtom(MWL_internal.display, "WM_DELETE_WINDOW", False);
+    XSetWMProtocols(MWL_internal.display, MWL_internal.window, &deleteWindow, 1);
+
+    MWL_Window window;
+    window.windowName = windowName;
+    window.closed = false;
 
 
 
     
 
+}
+
+inline int MWL_deleteWindow() {
+    XCloseDisplay(MWL_internal.display);
+}
+
+static inline int MWL_process(MWL_Window* windowToProcess) {
+    XNextEvent(MWL_internal.display, &MWL_internal.event);
+
+    switch(MWL_internal.event.type) {
+        case ClientMessage:
+            if(MWL_internal.event.xclient.data.1[0] == MWL_internal.deleteWindow) {
+                on_delete(MWL_internal.event.xclient.display, MWL_internal.event.xclient.window);
+                windowToProcess->closed = true;
+            }
+            break;
+    }
+
+    return 0;
+    
 }
 
 #endif

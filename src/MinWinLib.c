@@ -1,5 +1,4 @@
 /* MinWinLib.c */
-#include <stdio.h>
 #include <stdbool.h>
 
 #define MWL_SUCCESS 0

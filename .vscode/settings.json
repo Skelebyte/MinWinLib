@@ -1,7 +1,10 @@
 {
     "files.associations": {
+        "xlib.h": "c",
         "stdio.h": "c",
-        "cwindow.h": "c",
-        "*.rh": "cpp"
+        "stdbool.h": "c",
+        "cstdlib": "c",
+        "iostream": "c",
+        "system_error": "c"
     }
 }

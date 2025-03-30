@@ -1,3 +1,6 @@
+> [!WARNING]
+> This is completely out of date
+
 # MWL
 MinWinLib (MWL) is a simple, single-file library to create and manage windows, currently only supporting the Win32 API.
 > [!IMPORTANT]

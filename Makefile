@@ -27,7 +27,7 @@ wayland:
 
 win:
 ifeq ($(OS), Windows_NT)
-	gcc -o bin/MyProgram.exe src/Main.c -luser32 -lgdi32
+	gcc -o bin/MyProgram.exe src/Main.c -luser32 -mwindows -lgdi32
 else
 
 	x86_64-w64-mingw32-gcc -o bin/MyProgram.exe src/Main.c -luser32 -lgdi32

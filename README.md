@@ -22,7 +22,7 @@ int main() {
     MWL_Window window;
     MWL_createWindow(&window, "Hi, mum!", 1000, 600, MWL_DEFAULT_FLAGS);
 
-// The loop will run only if the window is open. This is where your program's main code goes.
+    // The loop will run only if the window is open. This is where your program's main code goes.
     while(MWL_process(&window) != MWL_QUIT) {
         // Code goes here...
     }

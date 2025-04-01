@@ -24,12 +24,11 @@ typedef struct {
     bool running;
 } MWL_Window;
 
-// System specific inlcudes
-#ifdef _WIN32
-
+// OS specific inlcudes
+#ifdef _WIN32 // Windows
 #include <windows.h>
-
-#elif __linux__
+#include <wingdi.h>
+#elif __linux__ // Linux
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <unistd.h>
@@ -42,6 +41,7 @@ typedef struct MWL_InternalWindow {
 	MSG message;
     HWND hwnd;
     RECT rect;
+    HDC hdc;
     #elif __linux__
     Window window;
     Display* display;
@@ -51,12 +51,6 @@ typedef struct MWL_InternalWindow {
 
 } MWL_InternalWindow;
 
-typedef struct MWL_Pixel {
-    int red;
-    int green;
-    int blue;
-    unsigned long color;
-} MWL_Color;
 
 static MWL_InternalWindow mwl_internalWindow;
 
@@ -81,28 +75,45 @@ int MWL_getScreenDimensions(int* w, int* h) {
         return MWL_SCREEN_HEIGHT_IS_ZERO;
     }
 
-    w = &_w;
-    h = &_h;
+    *w = _w;
+    *h = _h;
     return MWL_SUCCESS;
 }
 
 #ifdef _WIN32
 LRESULT CALLBACK MWL_windowProcess(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-
-    if(msg == WM_CLOSE) {
+    switch(msg) {
+        case WM_CLOSE:
         mwl_internalWindow.shouldCloseWindow = true;
-
-    } else if(msg == WM_DESTROY) {
+        break;
+        case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
+        case WM_ERASEBKGND: {
+            mwl_internalWindow.hdc = (HDC)wParam;
+
+            return 1;
+        }
+        
     }
+
+    
 
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 #endif
 
-
+/**
+ * @brief Creates a window with specified width, height, and flags.
+ * @param window Reference to the `MWL_Window` variable
+ * @param t The title of the window
+ * @param w Width of the window
+ * @param h Height of the window
+ * @param flags Flags for the window, such as `MWL_RESIZABLE`
+ * 
+ * `MWL_createWindow(&myWindow, "Hello, world!", 600, 400, MWL_RESIZABLE)`
+ */
 int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags) {
     #ifdef _WIN32
     DWORD style;
@@ -116,7 +127,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
     }
 
 	mwl_internalWindow.windowClass.cbSize = sizeof(WNDCLASSEX);
-	mwl_internalWindow.windowClass.style = style;
+	// mwl_internalWindow.windowClass.style = NULL;
 	mwl_internalWindow.windowClass.lpfnWndProc = MWL_windowProcess;
 	mwl_internalWindow.windowClass.cbClsExtra = 0;
 	mwl_internalWindow.windowClass.cbWndExtra = 0;
@@ -147,6 +158,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
 		NULL
 	);
     ShowWindow(mwl_internalWindow.hwnd, SW_SHOW);
+    UpdateWindow(mwl_internalWindow.hwnd);
 
     mwl_internalWindow.rect = (RECT){0};
 
@@ -180,7 +192,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
 	   // default stuff... 0
     }
 
-	// Check if resizing is supported
+	// Check if resizing is not supported
     if(!(flags & MWL_RESIZABLE)) {
         XSizeHints* hints = XAllocSizeHints();
         hints->flags = PMinSize | PMaxSize;
@@ -189,6 +201,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
         hints->min_height = h;
         hints->max_height = h;
         XSetWMNormalHints(mwl_internalWindow.display, mwl_internalWindow.window, hints);
+        XFree(hints);
     }
 
     mwl_internalWindow.deleteWindow = XInternAtom(mwl_internalWindow.display, "WM_DELETE_WINDOW", true);
@@ -223,6 +236,7 @@ int MWL_process(MWL_Window* windowToProcess) {
     #ifdef _WIN32
 
     MSG message = {0};
+    
 	while(PeekMessage(&message, mwl_internalWindow.hwnd, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&message);
@@ -248,39 +262,24 @@ int MWL_process(MWL_Window* windowToProcess) {
 
     return MWL_SUCCESS;
 }
-/**
- * @brief Returns an `unsigned long` that represents a color value (RGB)
- * @param r Red value
- * @param g Green value
- * @param b Blue value
-*/
-int MWL_color(MWL_Color* color, int r, int g, int b) {
-    // make sure the values aren't more than 255
-    if(r > 255) r = 255;
-    if(g > 255) g = 255;
-    if(b > 255) b = 255;
 
-    // make sure the values aren't less than 0
-    if(r < 0) r = 0;
-    if(g < 0) g = 0;
-    if(b < 0) b = 0;
-
-    color->red = r;
-    color->green = g;
-    color->blue = b;
-    color->color = (r << 16) | (g << 8) | (b);
-
-    return MWL_SUCCESS;
-}
 /**
  * @brief Sets the background color of the window.
- * @param pixel The `MWL_Color` value
-*/
-int MWL_setBackgroundColor(MWL_Color color) {
+ * @param r The red value
+ * @param g The green value
+ * @param b The blue value
+ */
+int MWL_setBackgroundColor(int r, int g, int b) {
     #ifdef _WIN32
-    mwl_internalWindow.windowClass.hbrBackground = (HBRUSH)CreateSolidBrush(RGB(color.red, color.green, color.blue));
+    RECT rect;
+            
+            GetClientRect(mwl_internalWindow.hwnd, &rect);
+            HBRUSH brush = (HBRUSH)CreateSolidBrush(RGB(45, 156, 200));
+            
+            FillRect(mwl_internalWindow.hdc, &rect, brush);
+            DeleteObject(brush);
     #elif __linux__
-    XSetWindowBackground(mwl_internalWindow.display, mwl_internalWindow.window, color.color);
+    XSetWindowBackground(mwl_internalWindow.display, mwl_internalWindow.window, (r << 16) | (g << 8) | (b));
     XClearWindow(mwl_internalWindow.display, mwl_internalWindow.window);
     #endif
 
@@ -290,7 +289,7 @@ int MWL_setBackgroundColor(MWL_Color color) {
 /**
  * @brief Waits for the amount of specified milliseconds before continuing.
  * @param amount The amount of milliseconds to wait for
-*/
+ */
 int MWL_waitForMillis(int amount) {
     #ifdef _WIN32
     Sleep(10);

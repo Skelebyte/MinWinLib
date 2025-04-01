@@ -3,15 +3,13 @@
 
 int main(void) {
     MWL_Window window;
-    MWL_createWindow(&window, "Hi, mum!", 300, 400, MWL_DEFAULT_FLAGS);
+    MWL_createWindow(&window, "Hi, mum!", 300, 400, MWL_RESIZABLE);
     int red = 0;
     int green = 0;
     int blue = 0;
-    MWL_Color pixel;
-    MWL_color(&pixel, red, green, blue);
-    MWL_setBackgroundColor(pixel);
+    MWL_setBackgroundColor(red, green, blue);
     while(MWL_process(&window) != MWL_QUIT) {
-        MWL_setBackgroundColor(pixel);
+        MWL_setBackgroundColor(red, green, blue);
         if(red < 255) {
             red += 4;
         }
@@ -21,9 +19,8 @@ int main(void) {
         if(blue < 255) {
             blue += 1;
         }
-        MWL_color(&pixel, red, green, blue);
 
-        MWL_waitForMillis(10);
+        //MWL_waitForMillis(10);
 
     }
 

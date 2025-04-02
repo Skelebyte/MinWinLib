@@ -17,7 +17,7 @@ const int MWL_RESIZABLE = 0x01;
 
 
 
-typedef struct {
+typedef struct MWL_Window {
     const char* windowTitle;
     int width;
     int height;
@@ -42,6 +42,10 @@ typedef struct MWL_InternalWindow {
     HWND hwnd;
     RECT rect;
     HDC hdc;
+    bool changeColor;
+    int r;
+    int g;
+    int b;
     #elif __linux__
     Window window;
     Display* display;
@@ -91,9 +95,18 @@ LRESULT CALLBACK MWL_windowProcess(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
         PostQuitMessage(0);
         return 0;
         case WM_ERASEBKGND: {
-            mwl_internalWindow.hdc = (HDC)wParam;
-
-            return 1;
+            if(mwl_internalWindow.changeColor) {
+                mwl_internalWindow.hdc = (HDC)wParam;
+                RECT rect;
+            
+                GetClientRect(mwl_internalWindow.hwnd, &rect);
+                HBRUSH brush = (HBRUSH)CreateSolidBrush(RGB(mwl_internalWindow.r, mwl_internalWindow.g, mwl_internalWindow.b));
+            
+                FillRect(mwl_internalWindow.hdc, &rect, brush);
+                DeleteObject(brush);
+                mwl_internalWindow.changeColor = false;
+                return 1;
+            }
         }
         
     }
@@ -271,13 +284,10 @@ int MWL_process(MWL_Window* windowToProcess) {
  */
 int MWL_setBackgroundColor(int r, int g, int b) {
     #ifdef _WIN32
-    RECT rect;
-            
-            GetClientRect(mwl_internalWindow.hwnd, &rect);
-            HBRUSH brush = (HBRUSH)CreateSolidBrush(RGB(45, 156, 200));
-            
-            FillRect(mwl_internalWindow.hdc, &rect, brush);
-            DeleteObject(brush);
+    mwl_internalWindow.changeColor = true;
+    mwl_internalWindow.r = r;
+    mwl_internalWindow.g = g;
+    mwl_internalWindow.b = b;
     #elif __linux__
     XSetWindowBackground(mwl_internalWindow.display, mwl_internalWindow.window, (r << 16) | (g << 8) | (b));
     XClearWindow(mwl_internalWindow.display, mwl_internalWindow.window);

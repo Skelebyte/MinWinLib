@@ -10,18 +10,23 @@ int main(void) {
     MWL_setBackgroundColor(red, green, blue);
     while(MWL_process(&window) != MWL_QUIT) {
         MWL_setBackgroundColor(red, green, blue);
+
         if(red < 255) {
-            red += 4;
+            red += 25;
         }
         if(green < 255) {
-            green += 5;
+            green += 25;
         }
         if(blue < 255) {
-            blue += 1;
+            blue += 25;
         }
 
-        //MWL_waitForMillis(10);
+        printf("r: %i\n", red);
+        printf("g: %i\n", green);
+        printf("b: %i\n", blue);
 
+        MWL_waitForMillis(1);
+        printf("Endofframe\n");
     }
 
     MWL_deleteWindow(&window);

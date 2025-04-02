@@ -232,6 +232,10 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
 
 }
 
+/**
+ * @brief Deletes the window.
+ * @param window Window to delete
+ */
 int MWL_deleteWindow(MWL_Window* window) {
 
     #ifdef _WIN32
@@ -243,7 +247,11 @@ int MWL_deleteWindow(MWL_Window* window) {
     return MWL_SUCCESS;
 }
 
-int MWL_process(MWL_Window* windowToProcess) {
+/**
+ * @brief Handles the windows events.
+ * @param window The target window to handle
+ */
+int MWL_process(MWL_Window* window) {
     if(mwl_internalWindow.shouldCloseWindow == true) {
         return MWL_QUIT;
     }
@@ -311,3 +319,4 @@ int MWL_waitForMillis(int amount) {
 
     return MWL_SUCCESS;
 }
+

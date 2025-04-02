@@ -5,6 +5,7 @@
         "stdbool.h": "c",
         "cstdlib": "c",
         "iostream": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "keysymdef.h": "c"
     }
 }

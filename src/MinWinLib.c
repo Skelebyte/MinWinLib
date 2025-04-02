@@ -27,12 +27,14 @@ typedef struct MWL_Window {
 // OS specific inlcudes
 #ifdef _WIN32 // Windows
 #include <windows.h>
+#include <winnt.h>
 #include <wingdi.h>
 #elif __linux__ // Linux
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <unistd.h>
 #endif
+
 
 typedef struct MWL_InternalWindow {
     bool shouldCloseWindow;
@@ -95,18 +97,18 @@ LRESULT CALLBACK MWL_windowProcess(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
         PostQuitMessage(0);
         return 0;
         case WM_ERASEBKGND: {
-            if(mwl_internalWindow.changeColor) {
-                mwl_internalWindow.hdc = (HDC)wParam;
-                RECT rect;
+            RECT rect;
+            mwl_internalWindow.hdc = (HDC)wParam;
+
             
-                GetClientRect(mwl_internalWindow.hwnd, &rect);
-                HBRUSH brush = (HBRUSH)CreateSolidBrush(RGB(mwl_internalWindow.r, mwl_internalWindow.g, mwl_internalWindow.b));
             
-                FillRect(mwl_internalWindow.hdc, &rect, brush);
-                DeleteObject(brush);
-                mwl_internalWindow.changeColor = false;
-                return 1;
-            }
+            GetClientRect(mwl_internalWindow.hwnd, &rect);
+            HBRUSH brush = (HBRUSH)CreateSolidBrush(RGB(mwl_internalWindow.r, mwl_internalWindow.g, mwl_internalWindow.b));
+            
+            FillRect(mwl_internalWindow.hdc, &rect, brush);
+            DeleteObject(brush);
+            
+            return 1;
         }
         
     }
@@ -159,7 +161,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
 	mwl_internalWindow.hwnd = CreateWindowEx(
 		0,
 		TEXT(MWL_WINDOW_CLASS),
-		TEXT(t),
+		t,
 		style,
 		mwl_internalWindow.rect.left,
         mwl_internalWindow.rect.top,
@@ -284,10 +286,10 @@ int MWL_process(MWL_Window* windowToProcess) {
  */
 int MWL_setBackgroundColor(int r, int g, int b) {
     #ifdef _WIN32
-    mwl_internalWindow.changeColor = true;
     mwl_internalWindow.r = r;
     mwl_internalWindow.g = g;
     mwl_internalWindow.b = b;
+    InvalidateRect(mwl_internalWindow.hwnd, NULL, true);
     #elif __linux__
     XSetWindowBackground(mwl_internalWindow.display, mwl_internalWindow.window, (r << 16) | (g << 8) | (b));
     XClearWindow(mwl_internalWindow.display, mwl_internalWindow.window);
@@ -302,7 +304,7 @@ int MWL_setBackgroundColor(int r, int g, int b) {
  */
 int MWL_waitForMillis(int amount) {
     #ifdef _WIN32
-    Sleep(10);
+    Sleep(amount);
     #elif __linux__
     usleep(amount * 1000);
     #endif

@@ -8,7 +8,7 @@ int main(void) {
     MWL_setBackgroundColor(50, 48, 47);
     
     while(MWL_process(&window) != MWL_QUIT) {
-        if (GetKeyState('A') & 0x8000)
+        if (GetKeyState('A') & 0x8000) // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
         {
             // ALT key is down.
             printf("a\n");

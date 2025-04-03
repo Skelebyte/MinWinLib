@@ -405,9 +405,14 @@ int MWL_createKeybind(MWL_Keybind* keybind, int kc) {
     return MWL_SUCCESS;
 }
 
+// TODO: change the `active` bool in keybind to true
 int MWL_processKeybind(MWL_Keybind* keybind) {
     #if _WIN32
-
+    if (GetKeyState(keybind->keycode) & 0x8000) // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+    {
+        // ALT key is down.
+        printf("a\n");
+    }
     #elif __linux__
     if(mwl_internalWindow.event.type == KeyPress) {
         KeySym key = XLookupKeysym(&mwl_internalWindow.event.xkey, 0);

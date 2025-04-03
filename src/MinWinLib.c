@@ -13,7 +13,8 @@
 #endif
 
 #define MWL_SUCCESS                0
-#define MWL_KEYBIND_ACTIVE         0
+#define MWL_KB_ACTIVE              1
+#define MWL_KB_INACTIVE            0
 #define MWL_FAILURE               -999
 #define MWL_QUIT                   1
 #define MWL_SCREEN_WIDTH_IS_ZERO  -1
@@ -324,8 +325,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
 		GetModuleHandle(NULL),
 		NULL
 	);
-    ShowWindow(mwl_internalWindow.hwnd, SW_SHOW);
-    UpdateWindow(mwl_internalWindow.hwnd);
+
 
     mwl_internalWindow.rect = (RECT){0};
 
@@ -334,7 +334,8 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
     int yPos = ((GetSystemMetrics(SM_CYSCREEN) - mwl_internalWindow.rect.bottom) / 2)  - h / 2;
 
     SetWindowPos(mwl_internalWindow.hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-
+    ShowWindow(mwl_internalWindow.hwnd, SW_SHOW);
+    UpdateWindow(mwl_internalWindow.hwnd);
     #elif __linux__
     mwl_internalWindow.display = XOpenDisplay(NULL);
     int screenW, screenH;
@@ -411,17 +412,18 @@ int MWL_processKeybind(MWL_Keybind* keybind) {
     if (GetKeyState(keybind->keycode) & 0x8000) // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
     {
         // ALT key is down.
-        printf("a\n");
+        return MWL_KB_ACTIVE;
     }
     #elif __linux__
     if(mwl_internalWindow.event.type == KeyPress) {
         KeySym key = XLookupKeysym(&mwl_internalWindow.event.xkey, 0);
         if(key == keybind->keycode) {
-            printf("gogo\n");
+            return MWL_KB_ACTIVE;
         }
         
     }
     #endif
+    return MWL_KB_INACTIVE;
 }
 
 /**
@@ -470,6 +472,13 @@ int MWL_process(MWL_Window* window) {
  * @param b The blue value
  */
 int MWL_setBackgroundColor(int r, int g, int b) {
+    if(r > 255) r = 255;
+    if(g > 255) g = 255;
+    if(b > 255) b = 255;
+
+    if(r < 0) r = 0;
+    if(g < 0) g = 0;
+    if(b < 0) b = 0;
     #ifdef _WIN32
     mwl_internalWindow.r = r;
     mwl_internalWindow.g = g;

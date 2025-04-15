@@ -522,6 +522,17 @@ int MWL_waitForMillis(int amount) {
     return MWL_SUCCESS;
 }
 
+int MWL_getWindowPos(int* x, int* y) {
+    #if _WIN32
+
+    #elif __linux__
+    XWindowAttributes windowAttrib;
+    XGetWindowAttributes(mwl_internalWindow.display, mwl_internalWindow.window, &windowAttrib);
+    *x = windowAttrib.x;
+    *y = windowAttrib.y;
+    #endif
+}
+
 int MWL_getCursorPos(int* x, int* y) {
     #if _WIN32
     POINT point;

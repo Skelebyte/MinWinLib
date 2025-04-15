@@ -1,6 +1,6 @@
 /* MinWinLib.c */
 #include <stdbool.h>
-// OS specific inlcudes
+// OS specific includes
 #ifdef _WIN32 // Windows
 #include <windows.h>
 #include <winnt.h>
@@ -44,7 +44,7 @@ const int MWL_ENTER  = 0x0D; // Return/Enter
 const int MWL_LSHIFT = 0xA0; // Left shift
 const int MWL_RSHIFT = 0xA1; // Right shift
 const int MWL_LCTRL  = 0xA2; // Left control
-const int MWL_RCTRL  = 0xA2; // Right control
+const int MWL_RCTRL  = 0xA3; // Right control
 const int MWL_LALT   = 0xA4; // Left alt
 const int MWL_RALT   = 0xA5; // Left alt
 const int MWL_CAPLCK = 0x14; // Caps lock
@@ -88,8 +88,8 @@ const int MWL_NMPD4  = 0x64; // Numpad 4
 const int MWL_NMPD5  = 0x65; // Numpad 5
 const int MWL_NMPD6  = 0x66; // Numpad 6
 const int MWL_NMPD7  = 0x67; // Numpad 7
-const int MWL_NMPD8  = 0x67; // Numpad 8
-const int MWL_NMPD9  = 0x67; // Numpad 9
+const int MWL_NMPD8  = 0x68; // Numpad 8
+const int MWL_NMPD9  = 0x69; // Numpad 9
 const int MWL_F1     = 0x70; // F1
 const int MWL_F2     = 0x71; // F2
 const int MWL_F3     = 0x72; // F3
@@ -102,7 +102,7 @@ const int MWL_F9     = 0x78; // F9
 const int MWL_F10    = 0x79; // F10
 const int MWL_F11    = 0x80; // F11
 const int MWL_F12    = 0x81; // F12
-const int MWL_GRAVE  = 0xC0; // Grave
+const int MWL_GRAVE  = 0xC0; // Grave/backtick/tilde (`~`)
 #elif __linux__
 // Keyboard keys
 const int MWL_BCKSPC = 0xff08; // Backspace
@@ -121,34 +121,32 @@ const int MWL_LEFT   = 0xff51; // Left arrow
 const int MWL_UP     = 0xff52; // Up arrow
 const int MWL_RIGHT  = 0xff53; // Right arrow
 const int MWL_DOWN   = 0xff54; // Down arrow
-// A little ulgy but a temporary solution to the either uppercase or lowercase
-// letters is to OR them together
-const int MWL_A      = 0x0041 | 0x0061; // A
-const int MWL_B      = 0x0042 | 0x0062; // B
-const int MWL_C      = 0x0043 | 0x0063; // C
-const int MWL_D      = 0x0044 | 0x0064; // D
-const int MWL_E      = 0x0045 | 0x0065; // E
-const int MWL_F      = 0x0046 | 0x0066; // F
-const int MWL_G      = 0x0047 | 0x0067; // G
-const int MWL_H      = 0x0048 | 0x0068; // H
-const int MWL_I      = 0x0049 | 0x0069; // I
-const int MWL_J      = 0x004a | 0x006a; // J
-const int MWL_K      = 0x004b | 0x006b; // K
-const int MWL_L      = 0x004c | 0x006c; // L
-const int MWL_M      = 0x004d | 0x006d; // M
-const int MWL_N      = 0x004e | 0x006e; // N
-const int MWL_O      = 0x004f | 0x006f; // O
-const int MWL_P      = 0x0050 | 0x0070; // P
-const int MWL_Q      = 0x0051 | 0x0071; // Q
-const int MWL_R      = 0x0052 | 0x0072; // R
-const int MWL_S      = 0x0053 | 0x0073; // S
-const int MWL_T      = 0x0054 | 0x0074; // T
-const int MWL_U      = 0x0055 | 0x0075; // U
-const int MWL_V      = 0x0056 | 0x0076; // V
-const int MWL_W      = 0x0057 | 0x0077; // W
-const int MWL_X      = 0x0058 | 0x0078; // X
-const int MWL_Y      = 0x0059 | 0x0079; // Y
-const int MWL_Z      = 0x005a | 0x007a; // Z
+const int MWL_A      = 0x0061; // A
+const int MWL_B      = 0x0062; // B
+const int MWL_C      = 0x0063; // C
+const int MWL_D      = 0x0064; // D
+const int MWL_E      = 0x0065; // E
+const int MWL_F      = 0x0066; // F
+const int MWL_G      = 0x0067; // G
+const int MWL_H      = 0x0068; // H
+const int MWL_I      = 0x0069; // I
+const int MWL_J      = 0x006a; // J
+const int MWL_K      = 0x006b; // K
+const int MWL_L      = 0x006c; // L
+const int MWL_M      = 0x006d; // M
+const int MWL_N      = 0x006e; // N
+const int MWL_O      = 0x006f; // O
+const int MWL_P      = 0x0070; // P
+const int MWL_Q      = 0x0071; // Q
+const int MWL_R      = 0x0072; // R
+const int MWL_S      = 0x0073; // S
+const int MWL_T      = 0x0074; // T
+const int MWL_U      = 0x0075; // U
+const int MWL_V      = 0x0076; // V
+const int MWL_W      = 0x0077; // W
+const int MWL_X      = 0x0078; // X
+const int MWL_Y      = 0x0079; // Y
+const int MWL_Z      = 0x007a; // Z
 const int MWL_NMPD0  = 0xffb0; // Numpad 0
 const int MWL_NMPD1  = 0xffb1; // Numpad 1
 const int MWL_NMPD2  = 0xffb2; // Numpad 2
@@ -171,7 +169,7 @@ const int MWL_F9     = 0xffc6; // F9
 const int MWL_F10    = 0xffc7; // F10
 const int MWL_F11    = 0xffc8; // F11
 const int MWL_F12    = 0xffc9; // F12
-const int MWL_GRAVE  = 0x0060; // Grave
+const int MWL_GRAVE  = 0x0060; // Grave/backtick/tilde (`~`)
 #endif
 
 
@@ -181,6 +179,7 @@ typedef struct MWL_Window {
     int width;
     int height;
     bool running;
+
 } MWL_Window;
 
 
@@ -223,8 +222,15 @@ int MWL_getScreenDimensions(int* w, int* h) {
     int _w = GetSystemMetrics(SM_CXSCREEN);
     int _h = GetSystemMetrics(SM_CYSCREEN);
     #elif __linux__
-    int _w = DisplayWidth(mwl_internalWindow.display, DefaultScreen(mwl_internalWindow.display));
-    int _h = DisplayHeight(mwl_internalWindow.display, DefaultScreen(mwl_internalWindow.display));
+    int _w = DisplayWidth(
+        mwl_internalWindow.display, 
+        DefaultScreen(mwl_internalWindow.display)
+    );
+
+    int _h = DisplayHeight(
+        mwl_internalWindow.display, 
+        DefaultScreen(mwl_internalWindow.display)
+    );
     #endif
 
     if(_w == 0) {
@@ -256,7 +262,9 @@ LRESULT CALLBACK MWL_windowProcess(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
             
             
             GetClientRect(mwl_internalWindow.hwnd, &rect);
-            HBRUSH brush = (HBRUSH)CreateSolidBrush(RGB(mwl_internalWindow.r, mwl_internalWindow.g, mwl_internalWindow.b));
+            HBRUSH brush = (HBRUSH)CreateSolidBrush(
+                RGB(mwl_internalWindow.r, mwl_internalWindow.g, mwl_internalWindow.b)
+            );
             
             FillRect(mwl_internalWindow.hdc, &rect, brush);
             DeleteObject(brush);
@@ -295,7 +303,6 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
     }
 
 	mwl_internalWindow.windowClass.cbSize = sizeof(WNDCLASSEX);
-	// mwl_internalWindow.windowClass.style      = NULL; // <-- causes crash if not NULL
 	mwl_internalWindow.windowClass.lpfnWndProc   = MWL_windowProcess;
 	mwl_internalWindow.windowClass.cbClsExtra    = 0;
 	mwl_internalWindow.windowClass.cbWndExtra    = 0;
@@ -354,7 +361,11 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
     );
     XStoreName(mwl_internalWindow.display, mwl_internalWindow.window, t);
     XMapWindow(mwl_internalWindow.display, mwl_internalWindow.window);
-    XSelectInput(mwl_internalWindow.display, mwl_internalWindow.window, ExposureMask | KeyReleaseMask | KeyPressMask);
+    XSelectInput(
+        mwl_internalWindow.display, 
+        mwl_internalWindow.window, 
+        ExposureMask | KeyReleaseMask | KeyPressMask | PointerMotionMask | ButtonPressMask | ButtonReleaseMask
+    );
 
 	if(flags & MWL_DEFAULT_FLAGS) {
 	   // default stuff... 0
@@ -374,6 +385,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
 
     mwl_internalWindow.deleteWindow = XInternAtom(mwl_internalWindow.display, "WM_DELETE_WINDOW", true);
     XSetWMProtocols(mwl_internalWindow.display, mwl_internalWindow.window, &mwl_internalWindow.deleteWindow, 1);
+
     #endif
 
     window->windowTitle = t;
@@ -485,7 +497,11 @@ int MWL_setBackgroundColor(int r, int g, int b) {
     mwl_internalWindow.b = b;
     InvalidateRect(mwl_internalWindow.hwnd, NULL, true);
     #elif __linux__
-    XSetWindowBackground(mwl_internalWindow.display, mwl_internalWindow.window, (r << 16) | (g << 8) | (b));
+    XSetWindowBackground(
+        mwl_internalWindow.display, 
+        mwl_internalWindow.window, 
+        (r << 16) | (g << 8) | (b)
+    );
     XClearWindow(mwl_internalWindow.display, mwl_internalWindow.window);
     #endif
 
@@ -506,3 +522,15 @@ int MWL_waitForMillis(int amount) {
     return MWL_SUCCESS;
 }
 
+int MWL_getCursorPos(int* x, int* y) {
+    #if _WIN32
+    POINT point;
+    GetCursorPos(&point);
+
+    *x = point.x;
+    *y = point.y;
+    #elif __linux__
+    *x = mwl_internalWindow.event.xbutton.x;
+    *y = mwl_internalWindow.event.xbutton.y;
+    #endif
+}

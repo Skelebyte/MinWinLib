@@ -15,9 +15,7 @@ endif
 
 linux:
 ifeq ($(OS), Windows_NT)
-	wsl
-	gcc -o  bin/MyProgram.x86_64 src/Main.c -lX11
-	exit
+	$(warning You are on windows! Please use WSL (Windows Subsystem for Linux) and run this command again!)
 else
 	gcc -o  bin/MyProgram.x86_64 src/Main.c -lX11
 endif
@@ -27,9 +25,8 @@ wayland:
 
 win:
 ifeq ($(OS), Windows_NT)
-	gcc -o bin/MyProgram.exe src/Main.c -luser32 -lgdi32 -mwindows
+	gcc -o bin/MyProgram.exe src/Main.c -luser32 -lgdi32
 else
-
 	x86_64-w64-mingw32-gcc -o bin/MyProgram.exe src/Main.c -luser32 -lgdi32
 endif
 

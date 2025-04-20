@@ -4,12 +4,11 @@
 
 int main(void) {
     MWL_Window window;
-    MWL_createWindow(&window, "Hi, mum!", 300, 400, MWL_RESIZABLE);
-    int x = 0;
-    int y = 0;
+    MWL_createWindow(&window, "Hi, mum!", 300, 400, 0);
     while(MWL_process(&window) != MWL_QUIT) {
-        MWL_getCursorPos(&x, &y);
-        printf("%d, %d \n", x, y);
+        if(MWL_processKey(MWL_SPACE)) {
+            MWL_toggleCursor(&window); // TODO: make sure the linux side of this actually works
+        }
         MWL_waitForMillis(10);
     }
 

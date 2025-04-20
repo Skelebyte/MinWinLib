@@ -13,8 +13,8 @@
 #endif
 
 #define MWL_SUCCESS                0
-#define MWL_KB_ACTIVE              1
-#define MWL_KB_INACTIVE            0
+#define MWL_KEY_PRESSED            1
+#define MWL_KEY_RELEASED           0
 #define MWL_FAILURE               -999
 #define MWL_QUIT                   1
 #define MWL_SCREEN_WIDTH_IS_ZERO  -1
@@ -173,12 +173,20 @@ const int MWL_GRAVE  = 0x0060; // Grave/backtick/tilde (`~`)
 #endif
 
 
-
+/**
+ * @brief Contains variables that relate to the window.
+ * @param windowTitle The name of the window
+ * @param width Width of the window in pixels
+ * @param height Height of the window in pixels
+ * @param running If the window is currently running
+ * @param cursorVisible If the cursor is visible
+ */
 typedef struct MWL_Window {
     const char* windowTitle;
     int width;
     int height;
     bool running;
+    bool cursorVisible;
 
 } MWL_Window;
 
@@ -200,14 +208,10 @@ typedef struct MWL_InternalWindow {
     Display* display;
     XEvent event;
     Atom deleteWindow;
+    Cursor cursor;
     #endif
 
 } MWL_InternalWindow;
-
-typedef struct MWL_Keybind {
-    int keycode;
-    bool active;
-} MWL_Keybind;
 
 
 static MWL_InternalWindow mwl_internalWindow;
@@ -216,6 +220,7 @@ static MWL_InternalWindow mwl_internalWindow;
  * @brief Get the dimensions of the screen.
  * @param w The target variable to set the width to
  * @param h The target variable to set the height to
+ * @returns `MWL_SUCCESS`
  */
 int MWL_getScreenDimensions(int* w, int* h) {
     #ifdef _WIN32
@@ -287,6 +292,7 @@ LRESULT CALLBACK MWL_windowProcess(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
  * @param w Width of the window
  * @param h Height of the window
  * @param flags Flags for the window, such as `MWL_RESIZABLE`
+ * @returns `MWL_SUCCESS` 
  * 
  * `MWL_createWindow(&myWindow, "Hello, world!", 600, 400, MWL_RESIZABLE)`
  */
@@ -340,7 +346,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
     int xPos = ((GetSystemMetrics(SM_CXSCREEN) - mwl_internalWindow.rect.right)  / 2)  - w / 2;
     int yPos = ((GetSystemMetrics(SM_CYSCREEN) - mwl_internalWindow.rect.bottom) / 2)  - h / 2;
 
-    SetWindowPos(mwl_internalWindow.hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+    //SetWindowPos(mwl_internalWindow.hwnd, 0, xPos, yPos, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
     ShowWindow(mwl_internalWindow.hwnd, SW_SHOW);
     UpdateWindow(mwl_internalWindow.hwnd);
     #elif __linux__
@@ -385,13 +391,14 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
 
     mwl_internalWindow.deleteWindow = XInternAtom(mwl_internalWindow.display, "WM_DELETE_WINDOW", true);
     XSetWMProtocols(mwl_internalWindow.display, mwl_internalWindow.window, &mwl_internalWindow.deleteWindow, 1);
-
+    mwl_internalWindow.cursor = 0;
     #endif
 
-    window->windowTitle = t;
-    window->width       = w;
-    window->height      = h;
-    window->running     = true;
+    window->windowTitle   = t;
+    window->width         = w;
+    window->height        = h;
+    window->running       = true;
+    window->cursorVisible = true;
 
     return MWL_SUCCESS;
 
@@ -400,6 +407,7 @@ int MWL_createWindow(MWL_Window* window, const char* t, int w, int h, int flags)
 /**
  * @brief Deletes the window.
  * @param window Window to delete
+ * @returns `MWL_SUCCESS`
  */
 int MWL_deleteWindow(MWL_Window* window) {
 
@@ -412,35 +420,33 @@ int MWL_deleteWindow(MWL_Window* window) {
     return MWL_SUCCESS;
 }
 
-int MWL_createKeybind(MWL_Keybind* keybind, int kc) {
-    keybind->keycode = kc;
-    keybind->active = false;
-    return MWL_SUCCESS;
-}
-
-// TODO: change the `active` bool in keybind to true
-int MWL_processKeybind(MWL_Keybind* keybind) {
+/**
+ * @brief checks if a specified key is down
+ * @param `keycode` The key to process
+ * @returns `MWL_KEY_PRESSED` if the key is down or `MWL_KEY_RELEASED` if it is not
+ */
+int MWL_processKey(int keycode) {
     #if _WIN32
-    if (GetKeyState(keybind->keycode) & 0x8000) // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+    if (GetKeyState(keycode) & 0x8000) // https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
     {
-        // ALT key is down.
-        return MWL_KB_ACTIVE;
+        return MWL_KEY_PRESSED;
     }
     #elif __linux__
     if(mwl_internalWindow.event.type == KeyPress) {
-        KeySym key = XLookupKeysym(&mwl_internalWindow.event.xkey, 0);
-        if(key == keybind->keycode) {
-            return MWL_KB_ACTIVE;
+        KeySym keysym = XLookupKeysym(&mwl_internalWindow.event.xkey, 0);
+        if(keysym == keycode) {
+            return MWL_KEY_PRESSED;
         }
         
     }
     #endif
-    return MWL_KB_INACTIVE;
+    return MWL_KEY_RELEASED;
 }
 
 /**
  * @brief Handles the windows events.
  * @param window The target window to handle
+ * @returns `MWL_SUCCESS` or `MWL_QUIT` if the window is trying to close
  */
 int MWL_process(MWL_Window* window) {
     if(mwl_internalWindow.shouldCloseWindow == true) {
@@ -482,6 +488,7 @@ int MWL_process(MWL_Window* window) {
  * @param r The red value
  * @param g The green value
  * @param b The blue value
+ * @returns `MWL_SUCCESS`
  */
 int MWL_setBackgroundColor(int r, int g, int b) {
     if(r > 255) r = 255;
@@ -511,6 +518,7 @@ int MWL_setBackgroundColor(int r, int g, int b) {
 /**
  * @brief Waits for the amount of specified milliseconds before continuing.
  * @param amount The amount of milliseconds to wait for
+ * @returns `MWL_SUCCESS`
  */
 int MWL_waitForMillis(int amount) {
     #ifdef _WIN32
@@ -522,26 +530,109 @@ int MWL_waitForMillis(int amount) {
     return MWL_SUCCESS;
 }
 
-int MWL_getWindowPos(int* x, int* y) {
-    #if _WIN32
+//TODO move this into `MWL_process`, and set the `width` and `heigh` variables in the window
+/**
+ * @brief Gets the size of the window.
+ * @param w Reference to the width variable
+ * @param h Reference to the height variable
+ * @returns `MWL_SUCCESS`
+ */
+int MWL_getWindowSize(int* w, int* h) {
+    int tempW;
+    int tempH;
 
+    #ifdef _WIN32
+    RECT rect;
+
+    if(GetWindowRect(mwl_internalWindow.hwnd, &rect)) {
+        tempW = rect.right - rect.left;
+        tempH = rect.bottom - rect.top;
+    }
+    #elif __linux__
+
+    #endif
+    
+    return MWL_SUCCESS;
+}
+
+/**
+ * @brief Gets the position of the window.
+ * @param x Reference to the `x` coordinate
+ * @param y Reference to the `y` coordinate
+ * @returns `MWL_SUCCESS`
+ */
+int MWL_getWindowPos(int* x, int* y) {
+    int tempX;
+    int tempY;
+    #ifdef _WIN32
+    RECT rect;
+    GetWindowRect(mwl_internalWindow.hwnd, &rect);
+    tempX = rect.left;
+    tempY = rect.top;
     #elif __linux__
     XWindowAttributes windowAttrib;
     XGetWindowAttributes(mwl_internalWindow.display, mwl_internalWindow.window, &windowAttrib);
-    *x = windowAttrib.x;
-    *y = windowAttrib.y;
+    tempX = windowAttrib.x;
+    tempY = windowAttrib.y;
     #endif
+
+    if(tempX < 0) {
+        tempX = 0;
+    }
+    if(tempY < 0) {
+        tempY = 0;
+    }
+    *x = tempX;
+    *y = tempY;
+    
+    return MWL_SUCCESS;
 }
 
+/**
+ * @brief Gets the position of the cursor, relative to the window.
+ * @param x Reference to the `x` coordinate
+ * @param y Reference to the `y` coordinate
+ * @returns `MWL_SUCCESS`
+ */
 int MWL_getCursorPos(int* x, int* y) {
-    #if _WIN32
+    int tempX;
+    int tempY;
+
+    #ifdef _WIN32
     POINT point;
     GetCursorPos(&point);
+    ScreenToClient(mwl_internalWindow.hwnd, &point);
+    tempX = point.x;
+    tempY = point.y;
 
-    *x = point.x;
-    *y = point.y;
     #elif __linux__
-    *x = mwl_internalWindow.event.xbutton.x;
-    *y = mwl_internalWindow.event.xbutton.y;
+    tempX = mwl_internalWindow.event.xbutton.x;
+    tempY = mwl_internalWindow.event.xbutton.y;
+    #endif
+    
+
+
+    *x = tempX;
+    *y = tempY;
+    
+    return MWL_SUCCESS;
+
+}
+
+/**
+ * @brief Toggles visibility of the cursor.
+ * @param window Reference to the window
+ * @returns `MWL_SUCCESS`
+ */
+int MWL_toggleCursor(MWL_Window* window) {
+    window->cursorVisible = !window->cursorVisible;
+    #ifdef _WIN32
+    ShowCursor(window->cursorVisible);
+    #elif __linux__
+    if(window->cursorVisible) {
+        XDefineCursor(mwl_internalWindow.display, mwl_internalWindow.window, mwl_internalWindow.cursor);
+    } else {
+        XUndefineCursor(mwl_internalWindow.display, mwl_internalWindow.window);
+    }
     #endif
 }

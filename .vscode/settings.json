@@ -6,6 +6,10 @@
         "cstdlib": "c",
         "iostream": "c",
         "system_error": "c",
-        "keysymdef.h": "c"
+        "keysymdef.h": "c",
+        "stdlib.h": "c",
+        "keysym.h": "c",
+        "khrplatform.h": "c",
+        "egl.h": "c"
     }
 }

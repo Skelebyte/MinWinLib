@@ -754,7 +754,7 @@ int MWL_initOGL()
 
 #ifdef _WIN32
 
-#else
+#elif __linux__
 
 #endif
 
